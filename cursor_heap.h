@@ -6,6 +6,35 @@
 #ifndef HSE_PLATFORM_CURSOR_HEAP_H
 #define HSE_PLATFORM_CURSOR_HEAP_H
 
+#include <sys/types.h>
+#include <string.h>
+#include <time.h>
+
+#define MIN(a, b) ((a) > (b)) ? (b) : (a)
+#define MAX(a, b) ((a) < (b)) ? (b) : (a)
+
+#define CL_SIZE 64
+#define CL_SHIFT 6
+
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1UL << PAGE_SHIFT)
+#define PAGE_MASK (~(PAGE_SIZE - 1))
+
+typedef u_int64_t u64;
+typedef u_int32_t u32;
+typedef u_int16_t u16;
+typedef u_int8_t  u8;
+
+static inline u64
+get_cycles(void)
+{
+    struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return (u64)ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+}
+
 /*
  * This is an allocator for use by the components of the HSE storage stack
  * stack.
@@ -15,14 +44,23 @@
  * are allocated.
  */
 
-#include <hse_util/base.h>
-#include <hse_util/inttypes.h>
-#include <hse_util/hse_err.h>
+/* Align @x upward to @mask. Value of @mask should be one less
+ * than a power of two (e.g., 0x0001ffff).
+ */
+#define ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
+
+/* Align @x upward to boundary @a (@a expected to be a power of 2).
+ */
+#define ALIGN(x, a) ALIGN_MASK(x, (typeof(x))(a)-1)
+
+/* Align 'addr' to the next page boundary.
+ */
+#define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
 #ifdef HSE_BUILD_RELEASE
 #define CHEAP_POISON_SZ 0
 #else
-#define CHEAP_POISON_SZ (SMP_CACHE_BYTES * 2)
+#define CHEAP_POISON_SZ (CL_SIZE * 2)
 #endif
 
 /* Everything in this structure is opaque to callers (but not really,
@@ -36,7 +74,7 @@ struct cheap {
     u64       base;
     u64       brk;
     void *    mem;
-    uintptr_t magic;
+    u64  magic;
 };
 
 /**
