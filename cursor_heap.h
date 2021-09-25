@@ -57,12 +57,6 @@ get_cycles(void)
  */
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
-#ifdef HSE_BUILD_RELEASE
-#define CHEAP_POISON_SZ 0
-#else
-#define CHEAP_POISON_SZ (CL_SIZE * 2)
-#endif
-
 /* Everything in this structure is opaque to callers (but not really,
  * because the cheap unit tests need access to the implementation).
  */
@@ -74,18 +68,21 @@ struct cheap {
     u64       base;
     u64       brk;
     void *    mem;
-    u64  magic;
+    u64       magic;
+    int       mfd;
 };
 
 /**
  * cheap_create() - Create a cursor heap from which to cheaply allocate memory
+ *
+ * @mem:        Memory to allocate items from
+ * @size:       Size of the memory at @mem
  * @alignment:  Alignment for cheap_alloc() (must be a power of 2 from 0 to 64)
- * @size:       Maximum size of the heap (in bytes)
  *
  * Return: Returns a ptr to a struct cheap if successful, otherwise NULL.
  */
 struct cheap *
-cheap_create(size_t alignment, size_t size);
+cheap_create(void *mem, size_t size, size_t alignment);
 
 /**
  * cheap_destroy() - destroy a cheap
@@ -96,26 +93,6 @@ cheap_create(size_t alignment, size_t size);
  */
 void
 cheap_destroy(struct cheap *h);
-
-/**
- * cheap_reset() - reset a cheap
- * @h:           the cheap to reset
- * @base_offset: offset from base of cheap region to reset to
- *
- * Return a cheap to an empty state, ready for use
- */
-void
-cheap_reset(struct cheap *h, size_t base_offset);
-
-/**
- * cheap_trim() - trim to a maximum resident set size
- * @h:          the cheap to trim
- * @rss:        maximum resident set size (in bytes)
- *
- * Reduce the RSS of the cheap to at most %rss bytes.
- */
-void
-cheap_trim(struct cheap *h, size_t rss);
 
 /**
  * cheap_malloc() - allocate space from a cheap
@@ -132,8 +109,14 @@ void *
 cheap_malloc(struct cheap *h, size_t size);
 
 /**
+ * Same as cheap_malloc, but exits if an allocation fails
+ */
+void *
+cheap_malloc(struct cheap *h, size_t size);
+
+/**
  * cheap_calloc() - allocate zeroed space from a cheap
- * @h:      the cheap from which to allocate
+ * @h:      the cheap from which to allocaet
  * @size:   size in bytes of the desired allocation
  *
  * This function has the same general calling convention and semantics

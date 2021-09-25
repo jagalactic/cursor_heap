@@ -8,8 +8,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "cursor_heap.h"
+#include "cheap_dax.h"
 #include "minmax.h"
 
 #define ASSERT(X)							\
@@ -24,47 +27,67 @@
 
 
 struct cheap *
-cheap_create(size_t alignment, size_t size)
+__cheap_create(void *mem, size_t size, size_t alignment)
 {
-    struct cheap *h = NULL;
-    void *        mem;
+	struct cheap *h = NULL;
 
-    if (alignment < 2)
-        alignment = 1;
-    else if (alignment > 64)
-        return NULL; /* This is item alignment, not heap alignment */
-    else if (alignment & (alignment - 1))
-        return NULL; /* Alignment must be a power of 2 */
+	if (alignment < 2)
+		alignment = 1;
+	else if (alignment > 64)
+		return NULL; /* This is item alignment, not heap alignment */
+	else if (alignment & (alignment - 1))
+		return NULL; /* Alignment must be a power of 2 */
 
-    /* Align the size of all cheaps to an integral multiple
-     * of 2MB in hopes of making life easier on the VMM.
-     */
-    size = ALIGN(size, 2u << 20);
+	/* Align the size of all cheaps to an integral multiple
+	 * of 2MB in hopes of making life easier on the VMM.
+	 */
+	size = ALIGN(size, 2u << 20);
 
-    /* Use MAP_PRIVATE so that cheap_trim() can release pages.
-     */
-    mem = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-
-    if (mem != MAP_FAILED) {
-        size_t halign = ALIGN(sizeof(*h), CL_SIZE);
-        size_t color = (get_cycles() >> 2) % 16;
-        size_t offset = CL_SIZE * color;
+	/* We do not use the managed memory for our metadata */
+	h = calloc(sizeof(*h), 1);
 
         /* Offset the base of the cheap by a pseudo-random number of
          * cache lines in effort to ameliorate cache conflict misses.
          */
-        h = mem + offset;
         h->mem = mem;
         h->magic = (u64)h;
         h->alignment = alignment;
-        h->size = size - offset - halign - CHEAP_POISON_SZ;
-        h->base = (u64)h + halign;
+        h->size = size;
+        h->base = ALIGN((u64)h->mem, CL_SIZE);
         h->cursorp = h->base;
         h->brk = PAGE_ALIGN(h->cursorp);
         h->lastp = 0;
-    }
 
-    return h;
+	return h;
+}
+
+struct cheap *
+cheap_create_dax(const char *devpath, size_t alignment)
+{
+	int mfd;
+	void *addr;
+	size_t size = cheap_devdax_get_file_size(devpath);
+	struct cheap *h;
+
+	if (size <= 0)
+		return NULL;
+
+	/* Map the DAX memory */
+	mfd = open(devpath, O_RDWR);
+	if (mfd < 0) {
+		fprintf(stderr, "Failed to open memory device %s\n",
+			devpath);
+		exit(-1);
+	}
+
+	addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED,
+		    mfd, 0);
+	if (addr == MAP_FAILED) {
+		fprintf(stderr, "mmap failed for device %s\n", devpath);
+		exit(-1);
+	}
+	h =  __cheap_create(addr, size, alignment);
+	h->mfd = mfd;
 }
 
 void
@@ -74,55 +97,10 @@ cheap_destroy(struct cheap *h)
         return;
 
     ASSERT(h->magic == (u64)h);
+    if (h->mfd)
+	    close(h->mfd);
+
     h->magic = ~h->magic;
-
-    munmap(h->mem, ALIGN(h->size, PAGE_SIZE));
-}
-
-void
-cheap_reset(struct cheap *h, size_t size)
-{
-    ASSERT(h->magic == (u64)h);
-    ASSERT(size < h->size);
-    ASSERT(size <= h->cursorp - h->base);
-
-    if (h->brk < h->cursorp)
-        h->brk = PAGE_ALIGN(h->cursorp);
-
-    h->cursorp = h->base + size;
-    h->lastp = 0;
-
-#if CHEAP_POISON_SZ > 0
-    memset((u64 *)h->cursorp, 0xa5, CHEAP_POISON_SZ);
-#endif
-}
-
-void
-cheap_trim(struct cheap *h, size_t rss)
-{
-    size_t len;
-    int    rc;
-
-    ASSERT(h->magic == (u64)h);
-
-    if (h->brk < h->cursorp)
-        h->brk = PAGE_ALIGN(h->cursorp);
-
-    rss = MAX(PAGE_ALIGN(rss), PAGE_SIZE);
-
-    if (rss < h->cursorp - h->base)
-        rss = PAGE_ALIGN(h->cursorp - h->base);
-
-    if (rss > h->brk - (u64)h->mem)
-        return;
-
-    len = h->brk - (u64)h->mem - rss;
-    if (len < PAGE_SIZE)
-        return;
-
-    h->brk = (u64)h->mem + rss;
-
-    rc = madvise(h->mem + rss, len, MADV_FREE);
 }
 
 static inline void *
@@ -159,6 +137,17 @@ void *
 cheap_malloc(struct cheap *h, size_t size)
 {
     return cheap_memalign_impl(h, h->alignment, size);
+}
+
+void *
+cheap_xmalloc(struct cheap *h, size_t size)
+{
+	void *mem = cheap_malloc(h, size);
+
+	if (mem == NULL)
+		exit(-1);
+
+	return mem;
 }
 
 void
