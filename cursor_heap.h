@@ -84,6 +84,9 @@ struct cheap {
 struct cheap *
 cheap_create(void *mem, size_t size, size_t alignment);
 
+struct cheap *
+cheap_create_dax(const char *devpath, size_t alignment);
+
 /**
  * cheap_destroy() - destroy a cheap
  * @h:  the cheap to destroy
@@ -112,7 +115,7 @@ cheap_malloc(struct cheap *h, size_t size);
  * Same as cheap_malloc, but exits if an allocation fails
  */
 void *
-cheap_malloc(struct cheap *h, size_t size);
+cheap_xmalloc(struct cheap *h, size_t size);
 
 /**
  * cheap_calloc() - allocate zeroed space from a cheap
