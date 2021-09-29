@@ -11,23 +11,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "types.h"
 #include "cursor_heap.h"
 #include "cheap_dax.h"
 #include "minmax.h"
-
-#define ASSERT(X)							\
-	do {								\
-		if (!(X)) {						\
-			fprintf(stderr, "Assertion " #X " failed\n");	\
-			exit(-1);					\
-		}							\
-	} while (0)
-
-
-
+#include "assert.h"
 
 struct cheap *
-__cheap_create(void *mem, size_t size, size_t alignment)
+cheap_create(void *mem, size_t size, size_t alignment)
 {
 	struct cheap *h = NULL;
 
@@ -86,7 +77,7 @@ cheap_create_dax(const char *devpath, size_t alignment)
 		fprintf(stderr, "mmap failed for device %s\n", devpath);
 		exit(-1);
 	}
-	h =  __cheap_create(addr, size, alignment);
+	h =  cheap_create(addr, size, alignment);
 	h->mfd = mfd;
 }
 
@@ -96,7 +87,7 @@ cheap_destroy(struct cheap *h)
     if (!h)
         return;
 
-    ASSERT(h->magic == (u64)h);
+    assert(h->magic == (u64)h);
     if (h->mfd)
 	    close(h->mfd);
 
@@ -108,7 +99,7 @@ cheap_memalign_impl(struct cheap *h, size_t alignment, size_t size)
 {
     u64 allocp;
 
-    ASSERT(h->magic == (u64)h);
+    assert(h->magic == (u64)h);
 
     allocp = ALIGN(h->cursorp, alignment);
 
@@ -174,7 +165,7 @@ cheap_free(struct cheap *h, void *addr)
 size_t
 cheap_used(struct cheap *h)
 {
-    ASSERT(h->magic == (u64)h);
+    assert(h->magic == (u64)h);
 
     return min_t(size_t, h->size, (h->cursorp - h->base));
 }
@@ -182,7 +173,7 @@ cheap_used(struct cheap *h)
 size_t
 cheap_avail(struct cheap *h)
 {
-    ASSERT(h->magic == (u64)h);
+    assert(h->magic == (u64)h);
 
     return h->size - cheap_used(h);
 }

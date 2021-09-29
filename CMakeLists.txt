@@ -7,9 +7,12 @@ project(libcursorheap)
 ### Source definitions ###
 ##
 
+message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
+include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}/testlib")
 
-file(GLOB sources "${PROJECT_SOURCE_DIR}/src/*.c")
+#file(GLOB sources "${PROJECT_SOURCE_DIR}/src/*.c")
 
 #add_executable(testy ${sources})
 add_library(cheap_dax cursor_heap.c cheap_dax.c )
@@ -31,5 +34,7 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
         ${CMAKE_BINARY_DIR}/googletest-build)
 
 enable_testing()
-#add_subdirectory(test)
+
+add_subdirectory(testlib)
+add_subdirectory(test)
 

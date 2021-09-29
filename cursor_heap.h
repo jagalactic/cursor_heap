@@ -10,6 +10,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "types.h"
+
 #define MIN(a, b) ((a) > (b)) ? (b) : (a)
 #define MAX(a, b) ((a) < (b)) ? (b) : (a)
 
@@ -19,11 +21,6 @@
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
 #define PAGE_MASK (~(PAGE_SIZE - 1))
-
-typedef u_int64_t u64;
-typedef u_int32_t u32;
-typedef u_int16_t u16;
-typedef u_int8_t  u8;
 
 static inline u64
 get_cycles(void)
