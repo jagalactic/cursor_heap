@@ -79,8 +79,17 @@ struct cheap {
  * Return: Returns a ptr to a struct cheap if successful, otherwise NULL.
  */
 struct cheap *
-cheap_create(void *mem, size_t size, size_t alignment);
+cheap_create(size_t size, size_t alignment);
 
+/**
+ * cheap_create_dax() - Create a cursor heap from an entire DAX device
+ *
+ * @mem:        Memory to allocate items from
+ * @devpath:    dax device to map (e.g. /dev/dax0.0)
+ * @alignment:  Alignment for cheap_alloc() (must be a power of 2 from 0 to 64)
+ *
+ * Return: Returns a ptr to a struct cheap if successful, otherwise NULL.
+ */
 struct cheap *
 cheap_create_dax(const char *devpath, size_t alignment);
 

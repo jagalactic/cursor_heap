@@ -17,22 +17,20 @@
 #include "minmax.h"
 #include "assert.h"
 
-struct cheap *
-cheap_create(void *mem, size_t size, size_t alignment)
+static struct cheap *
+__cheap_create(void *mem, size_t size, size_t alignment)
 {
 	struct cheap *h = NULL;
 
-	if (alignment < 2)
+	if (alignment < 2) {
 		alignment = 1;
-	else if (alignment > 64)
+	}
+	else if (alignment > 64) {
 		return NULL; /* This is item alignment, not heap alignment */
-	else if (alignment & (alignment - 1))
+	}
+	else if (alignment & (alignment - 1)) {
 		return NULL; /* Alignment must be a power of 2 */
-
-	/* Align the size of all cheaps to an integral multiple
-	 * of 2MB in hopes of making life easier on the VMM.
-	 */
-	size = ALIGN(size, 2u << 20);
+	}
 
 	/* We do not use the managed memory for our metadata */
 	h = calloc(sizeof(*h), 1);
@@ -40,16 +38,40 @@ cheap_create(void *mem, size_t size, size_t alignment)
         /* Offset the base of the cheap by a pseudo-random number of
          * cache lines in effort to ameliorate cache conflict misses.
          */
-        h->mem = mem;
-        h->magic = (u64)h;
+        h->mem       = mem;
+        h->magic     = (u64)h;
         h->alignment = alignment;
-        h->size = size;
-        h->base = ALIGN((u64)h->mem, CL_SIZE);
-        h->cursorp = h->base;
-        h->brk = PAGE_ALIGN(h->cursorp);
-        h->lastp = 0;
+        h->size      = size;
+        h->base      = ALIGN((u64)h->mem, CL_SIZE);
+        h->cursorp   = h->base;
+        h->brk       = PAGE_ALIGN(h->cursorp);
+        h->lastp     = 0;
 
 	return h;
+}
+
+struct cheap *
+
+cheap_create(size_t size, size_t alignment)
+{
+	void *addr;
+
+	if (size < 0)
+		return NULL;
+
+	/* Align the size of all cheaps to an integral multiple
+	 * of 2MB in hopes of making life easier on the VMM.
+	 */
+	size = ALIGN(size, 2u << 20);
+
+	/* get memory via anonymous mmap */
+	addr = mmap(NULL, size, PROT_READ | PROT_WRITE,
+		    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	if (addr == MAP_FAILED) {
+		fprintf(stderr, "Anonymous mmap failed\n");
+		exit(-1);
+	}
+	return __cheap_create(addr, size, alignment);
 }
 
 struct cheap *
@@ -77,7 +99,7 @@ cheap_create_dax(const char *devpath, size_t alignment)
 		fprintf(stderr, "mmap failed for device %s\n", devpath);
 		exit(-1);
 	}
-	h =  cheap_create(addr, size, alignment);
+	h =  __cheap_create(addr, size, alignment);
 	h->mfd = mfd;
 }
 
