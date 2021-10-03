@@ -1,6 +1,8 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
+
 project(libcursorheap)
 
 ##
@@ -12,9 +14,7 @@ include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/testlib")
 
-#file(GLOB sources "${PROJECT_SOURCE_DIR}/src/*.c")
 
-#add_executable(testy ${sources})
 add_library(cheap_dax cursor_heap.c cheap_dax.c )
 
 

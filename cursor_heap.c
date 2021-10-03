@@ -117,7 +117,7 @@ cheap_destroy(struct cheap *h)
 }
 
 static inline void *
-cheap_memalign_impl(struct cheap *h, size_t alignment, size_t size)
+cheap_memalign_impl(struct cheap *h, size_t size, size_t alignment)
 {
     u64 allocp;
 
@@ -138,18 +138,18 @@ cheap_memalign_impl(struct cheap *h, size_t alignment, size_t size)
 }
 
 void *
-cheap_memalign(struct cheap *h, size_t alignment, size_t size)
+cheap_memalign(struct cheap *h, size_t size, size_t alignment)
 {
 	if (alignment & (alignment - 1))
 		return NULL;
 
-	return cheap_memalign_impl(h, alignment, size);
+	return cheap_memalign_impl(h, size, alignment);
 }
 
 void *
 cheap_malloc(struct cheap *h, size_t size)
 {
-    return cheap_memalign_impl(h, h->alignment, size);
+	return cheap_memalign_impl(h, size, h->alignment);
 }
 
 void *

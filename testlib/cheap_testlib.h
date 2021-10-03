@@ -7,6 +7,7 @@
 #define HSE_CHEAP_TESTLIB_H
 
 #include "cursor_heap.h"
+#include <stdio.h>
 
 int
 cheap_fill_test(struct cheap *h, size_t size);
@@ -29,34 +30,42 @@ enum which_strict_test {
 int
 cheap_strict_test1(struct cheap *h, u32 min_size, u32 max_size, enum which_strict_test which);
 
-#define VERIFY_FALSE_RET(cond, rc) \
-  do {				   \
-    if (cond) {			   \
-      return(rc);		   \
-    }				   \
+#define VERIFY_FALSE_RET(cond, rc)		  \
+  do {						  \
+    if (cond) {					  \
+      printf("VERIFY_FALSE_RET FAIL: %s:%s:%d\n", \
+	     __FILE__, __func__, __LINE__);	  \
+      return(rc);				  \
+    }						  \
   } while (0)
 
 
-#define VERIFY_TRUE_RET(cond, rc)  \
-  do {				   \
-    if (!(cond)) {		   \
-      return(rc);		   \
-    }				   \
+#define VERIFY_TRUE_RET(cond, rc)		  \
+  do {						  \
+    if (!(cond)) {				  \
+      printf("VERIFY_TRUE_RET FAIL: %s:%s:%d\n",  \
+	     __FILE__, __func__, __LINE__);	  \
+      return(rc);				  \
+    }						  \
   } while (0)
 
 
-#define VERIFY_NE_RET(a, b, rc)  \
-  do {				   \
-    if ((a) == (b)) {		   \
-      return(rc);		   \
-    }				   \
+#define VERIFY_NE_RET(a, b, rc)		       \
+  do {					       \
+    if ((a) == (b)) {			       \
+      printf("VERIFY_NE_RET FAIL: %s:%s:%d\n", \
+	     __FILE__, __func__, __LINE__);    \
+      return(rc);			       \
+    }					       \
   } while (0)
 
-#define VERIFY_EQ_RET(a, b, rc)  \
-  do {				   \
-    if ((a) != (b)) {		   \
-      return(rc);		   \
-    }				   \
+#define VERIFY_EQ_RET(a, b, rc)			  \
+  do {						  \
+    if ((a) != (b)) {				  \
+      printf("VERIFY_EQ_RET FAIL: %s:%s:%d\n",	  \
+	     __FILE__, __func__, __LINE__);	  \
+      return(rc);				  \
+    }						  \
   } while (0)
 
 

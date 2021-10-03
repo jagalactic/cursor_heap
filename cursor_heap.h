@@ -54,6 +54,10 @@ get_cycles(void)
  */
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
+/* Test if 'x' is aligned to 'a' boundary ('a' must be a power 2).
+ */
+#define IS_ALIGNED(x, a) (((x) & ((typeof(x))(a)-1)) == 0)
+
 /* Everything in this structure is opaque to callers (but not really,
  * because the cheap unit tests need access to the implementation).
  */

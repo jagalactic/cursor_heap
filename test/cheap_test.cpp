@@ -200,7 +200,7 @@ TEST(cheap_test, cheap_test_used)
     u8 *          p;
     int           i;
 
-    h = cheap_create(4096, 6);
+    h = cheap_create(4096, 0);
     ASSERT_NE(0UL, (u64)h);
 
     avail = cheap_avail(h);
@@ -257,7 +257,6 @@ TEST(cheap_test, cheap_test_poison)
 #endif
 
 
-#if 0
 /* fix uintptr_t */
 
 /* Verify cheap_memalign() works as expected. */
@@ -268,13 +267,13 @@ TEST(cheap_test, cheap_test_memalign)
     size_t        align, sz;
     uintptr_t     p;
 
-    h = cheap_create(total, 0
+    h = cheap_create(total, 0);
     ASSERT_NE(0UL, (u64)h);
 
-    p = (uintptr_t)cheap_memalign(h, 16, total + 1);
+    p = (uintptr_t)cheap_memalign(h, total + 1, 16);
     ASSERT_EQ(0UL, (u64)p);
 
-    p = (uintptr_t)cheap_memalign(h, 3, 8);
+    p = (uintptr_t)cheap_memalign(h, 8, 3);
     ASSERT_EQ(0UL, (u64)p);
 
     sz = cheap_avail(h);
@@ -282,7 +281,7 @@ TEST(cheap_test, cheap_test_memalign)
     total = sz;
 
     for (align = 1; align < total; align *= 2) {
-        p = (uintptr_t)cheap_memalign(h, align, sizeof(*p));
+        p = (uintptr_t)cheap_memalign(h, sizeof(p), align);
 
         /* cheap allocation alignment is highly non-deterministic
          * and may not always be able to fulfill an alignment
@@ -299,7 +298,6 @@ TEST(cheap_test, cheap_test_memalign)
 
     cheap_destroy(h);
 }
-#endif
 
 /* Verify cheap_free() works as expected. */
 TEST(cheap_test, cheap_test_free)
@@ -423,7 +421,7 @@ TEST(cheap_test, cheap_test_trim)
     ASSERT_GE(sz, PAGE_SIZE);
 
     for (i = 0; i < maxpg - 1; ++i) {
-        p = cheap_memalign(h, PAGE_SIZE, 8);
+        p = cheap_memalign(h, 8, PAGE_SIZE);
         ASSERT_NE(NULL, p);
         ASSERT_TRUE(IS_ALIGNED((uintptr_t)p, PAGE_SIZE));
 
