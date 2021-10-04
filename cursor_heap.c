@@ -18,7 +18,7 @@
 #include "assert.h"
 
 static struct cheap *
-__cheap_create(void *mem, size_t size, size_t alignment)
+__cheap_create(void *mem, int alignment, size_t size)
 {
 	struct cheap *h = NULL;
 
@@ -40,7 +40,7 @@ __cheap_create(void *mem, size_t size, size_t alignment)
          */
         h->mem       = mem;
         h->magic     = (u64)h;
-        h->alignment = alignment;
+        h->alignment = (size_t)alignment;
         h->size      = size;
         h->base      = ALIGN((u64)h->mem, CL_SIZE);
         h->cursorp   = h->base;
@@ -52,7 +52,7 @@ __cheap_create(void *mem, size_t size, size_t alignment)
 
 struct cheap *
 
-cheap_create(size_t size, size_t alignment)
+cheap_create(int alignment, size_t size)
 {
 	void *addr;
 
@@ -71,17 +71,18 @@ cheap_create(size_t size, size_t alignment)
 		fprintf(stderr, "Anonymous mmap failed\n");
 		exit(-1);
 	}
-	return __cheap_create(addr, size, alignment);
+	return __cheap_create(addr, alignment, size);
 }
 
 struct cheap *
-cheap_create_dax(const char *devpath, size_t alignment)
+cheap_create_dax(const char *devpath, int alignment)
 {
 	int mfd;
 	void *addr;
 	size_t size = cheap_devdax_get_file_size(devpath);
 	struct cheap *h;
 
+	printf("%s: %s size is %ld\n", __func__, devpath, size);
 	if (size <= 0)
 		return NULL;
 
@@ -99,7 +100,7 @@ cheap_create_dax(const char *devpath, size_t alignment)
 		fprintf(stderr, "mmap failed for device %s\n", devpath);
 		exit(-1);
 	}
-	h =  __cheap_create(addr, size, alignment);
+	h =  __cheap_create(addr, alignment, size);
 	h->mfd = mfd;
 }
 
@@ -117,7 +118,7 @@ cheap_destroy(struct cheap *h)
 }
 
 static inline void *
-cheap_memalign_impl(struct cheap *h, size_t size, size_t alignment)
+cheap_memalign_impl(struct cheap *h, int alignment, size_t size)
 {
     u64 allocp;
 
@@ -138,18 +139,18 @@ cheap_memalign_impl(struct cheap *h, size_t size, size_t alignment)
 }
 
 void *
-cheap_memalign(struct cheap *h, size_t size, size_t alignment)
+cheap_memalign(struct cheap *h, int alignment, size_t size)
 {
 	if (alignment & (alignment - 1))
 		return NULL;
 
-	return cheap_memalign_impl(h, size, alignment);
+	return cheap_memalign_impl(h, alignment, size);
 }
 
 void *
 cheap_malloc(struct cheap *h, size_t size)
 {
-	return cheap_memalign_impl(h, size, h->alignment);
+	return cheap_memalign_impl(h, h->alignment, size);
 }
 
 void *

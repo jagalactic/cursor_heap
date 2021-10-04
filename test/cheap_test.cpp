@@ -24,7 +24,7 @@ TEST(cursor_heap, invalidcreate1)
     size_t        total = 1048576;
     struct cheap *h;
 
-    h = cheap_create(total, 3);
+    h = cheap_create(3, total);
     ASSERT_EQ(0UL, h);
     cheap_destroy(h);
 }
@@ -35,7 +35,7 @@ TEST(cheap_test, valid_create0)
     size_t        total = 1048576;
     struct cheap *h;
 
-    h = cheap_create(total, 1);
+    h = cheap_create(1, total);
     ASSERT_NE(0UL, (u64)h);
     cheap_destroy(h);
 }
@@ -46,7 +46,7 @@ TEST(cheap_test, valid_create1)
     size_t        total = 1048576;
     struct cheap *h;
 
-    h = cheap_create(total, 2);
+    h = cheap_create(2, total);
     ASSERT_NE(0UL, (u64)h);
     cheap_destroy(h);
 }
@@ -59,7 +59,7 @@ TEST(cheap_test, valid_fill0)
     size_t        total = 1048576;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 8);
+    h = cheap_create(8, total);
     ASSERT_NE(0UL, (u64)h);
 
     total = cheap_avail(h);
@@ -76,7 +76,7 @@ TEST(cheap_test, verify_test1)
     size_t        total = 1048576;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 8);
+    h = cheap_create(8, total);
     ASSERT_NE(0UL, (u64)h);
 
     rc = cheap_verify_test1(h, 4, 4096);
@@ -91,7 +91,7 @@ TEST(cheap_test, verify_test2)
     size_t        total = 104857600;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 8);
+    h = cheap_create(8, total);
     ASSERT_NE(0UL, (u64)h);
 
     rc = cheap_verify_test1(h, 4, 8192);
@@ -106,7 +106,7 @@ TEST(cheap_test, verify_test3)
     size_t        total = 104857600;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 0);
+    h = cheap_create(0, total);
     ASSERT_NE(0UL, (u64)h);
 
     rc = cheap_verify_test1(h, 8, 64);
@@ -121,7 +121,7 @@ TEST(cheap_test, verify_test4)
     size_t        total = 104857600;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 0);
+    h = cheap_create(0, total);
     ASSERT_NE(0UL, (u64)h);
 
     /* Very small allocations */
@@ -137,7 +137,7 @@ TEST(cheap_test, zero_test1)
     size_t        total = 1048576;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 8);
+    h = cheap_create(8, total);
     ASSERT_NE(0UL, (u64)h);
 
     rc = cheap_zero_test1(h, 4, 4096);
@@ -152,7 +152,7 @@ TEST(cheap_test, zero_test2)
     size_t        total = 104857600;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 8);
+    h = cheap_create(8, total);
     ASSERT_NE(0UL, (u64)h);
 
     rc = cheap_zero_test1(h, 4, 8192);
@@ -167,7 +167,7 @@ TEST(cheap_test, zero_test3)
     size_t        total = 104857600;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 0);
+    h = cheap_create(0, total);
     ASSERT_NE(0UL, (u64)h);
 
     rc = cheap_zero_test1(h, 8, 64);
@@ -182,7 +182,7 @@ TEST(cheap_test, zero_test4)
     size_t        total = 104857600;
     struct cheap *h = 0;
 
-    h = cheap_create(total, 0);
+    h = cheap_create(0, total);
     ASSERT_NE(0UL, (u64)h);
 
     /* Very small allocations */
@@ -200,7 +200,7 @@ TEST(cheap_test, cheap_test_used)
     u8 *          p;
     int           i;
 
-    h = cheap_create(4096, 0);
+    h = cheap_create(0, 4096);
     ASSERT_NE(0UL, (u64)h);
 
     avail = cheap_avail(h);
@@ -236,7 +236,7 @@ TEST(cheap_test, cheap_test_poison)
 
     ASSERT_GT(CHEAP_POISON_SZ, 0);
 
-    h = cheap_create(CHEAP_POISON_SZ * 4, 0
+    h = cheap_create(0, CHEAP_POISON_SZ * 4);
     ASSERT_NE(0UL, (u64)h);
 
     p = cheap_malloc(h, CHEAP_POISON_SZ * 2);
@@ -267,13 +267,13 @@ TEST(cheap_test, cheap_test_memalign)
     size_t        align, sz;
     uintptr_t     p;
 
-    h = cheap_create(total, 0);
+    h = cheap_create(0, total);
     ASSERT_NE(0UL, (u64)h);
 
-    p = (uintptr_t)cheap_memalign(h, total + 1, 16);
+    p = (uintptr_t)cheap_memalign(h, 16, total + 1);
     ASSERT_EQ(0UL, (u64)p);
 
-    p = (uintptr_t)cheap_memalign(h, 8, 3);
+    p = (uintptr_t)cheap_memalign(h, 3, 8);
     ASSERT_EQ(0UL, (u64)p);
 
     sz = cheap_avail(h);
@@ -281,7 +281,7 @@ TEST(cheap_test, cheap_test_memalign)
     total = sz;
 
     for (align = 1; align < total; align *= 2) {
-        p = (uintptr_t)cheap_memalign(h, sizeof(p), align);
+        p = (uintptr_t)cheap_memalign(h, align, sizeof(p));
 
         /* cheap allocation alignment is highly non-deterministic
          * and may not always be able to fulfill an alignment
@@ -316,7 +316,7 @@ TEST(cheap_test, cheap_test_free)
         allocmax = ((get_cycles() >> 1) % 32768) + 1;
         cheapsz = itermax * ALIGN(allocmax, align) + PAGE_SIZE;
 
-        h = cheap_create(cheapsz, align);
+        h = cheap_create(align, cheapsz);
         ASSERT_NE(0UL, (u64)h);
 
         free = cheap_avail(h);
@@ -412,7 +412,7 @@ TEST(cheap_test, cheap_test_trim)
     uintptr_t     p;
     int           i;
 
-    h = cheap_create(maxpg * PAGE_SIZE, 0);
+    h = cheap_create(0, maxpg * PAGE_SIZE);
     ASSERT_NE(0UL, (u64)h);
 
     /* After create at least one page should be resident.
@@ -421,7 +421,7 @@ TEST(cheap_test, cheap_test_trim)
     ASSERT_GE(sz, PAGE_SIZE);
 
     for (i = 0; i < maxpg - 1; ++i) {
-        p = cheap_memalign(h, 8, PAGE_SIZE);
+        p = cheap_memalign(h, PAGE_SIZE, 8);
         ASSERT_NE(NULL, p);
         ASSERT_TRUE(IS_ALIGNED((uintptr_t)p, PAGE_SIZE));
 

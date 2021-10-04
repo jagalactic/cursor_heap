@@ -77,13 +77,13 @@ struct cheap {
  * cheap_create() - Create a cursor heap from which to cheaply allocate memory
  *
  * @mem:        Memory to allocate items from
- * @size:       Size of the memory at @mem
  * @alignment:  Alignment for cheap_alloc() (must be a power of 2 from 0 to 64)
+ * @size:       Size of the memory at @mem
  *
  * Return: Returns a ptr to a struct cheap if successful, otherwise NULL.
  */
 struct cheap *
-cheap_create(size_t size, size_t alignment);
+cheap_create(int alignment, size_t size);
 
 /**
  * cheap_create_dax() - Create a cursor heap from an entire DAX device
@@ -95,7 +95,7 @@ cheap_create(size_t size, size_t alignment);
  * Return: Returns a ptr to a struct cheap if successful, otherwise NULL.
  */
 struct cheap *
-cheap_create_dax(const char *devpath, size_t alignment);
+cheap_create_dax(const char *devpath, int alignment);
 
 /**
  * cheap_destroy() - destroy a cheap
@@ -165,7 +165,7 @@ cheap_free(struct cheap *h, void *addr);
  * Return: Returns 0 if successful, otherwise returns an errno.
  */
 void *
-cheap_memalign(struct cheap *h, size_t alignment, size_t size);
+cheap_memalign(struct cheap *h, int alignment, size_t size);
 
 /**
  * cheap_used() - return number of bytes used
