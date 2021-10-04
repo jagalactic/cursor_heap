@@ -139,12 +139,13 @@ cheap_verify_test1(struct cheap *h, u32 min_size, u32 max_size)
     /* Fill the buffers with repeatable pseudo-random data */
     for (i = 0; i < num_bufs; i++) {
         /* random seed is low 32 bits of buf address */
-        randomize_buffer(bufs[i], buf_sizes[i], (int)bufs[i]);
+        randomize_buffer(bufs[i], buf_sizes[i], (int)(u64)bufs[i]);
     }
 
     /* Validate the data in the buffers */
     for (i = 0; i < num_bufs; i++) {
-        rc = validate_random_buffer(bufs[i], buf_sizes[i], (int)bufs[i]);
+        rc = validate_random_buffer(bufs[i], buf_sizes[i],
+				    (int)(u64)bufs[i]);
         /* Success is -1, because the error offset is returned
          * on error (which ranges from 0 to size-1 */
         VERIFY_EQ_RET(-1, rc, -1);
