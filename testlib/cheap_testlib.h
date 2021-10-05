@@ -13,10 +13,10 @@ int
 cheap_fill_test(struct cheap *h, size_t size);
 
 int
-cheap_verify_test1(struct cheap *h, u32 min_size, u32 max_size);
+cheap_verify_test1(struct cheap *h, u_int32_t min_size, u_int32_t max_size);
 
 int
-cheap_zero_test1(struct cheap *h, u32 min_size, u32 max_size);
+cheap_zero_test1(struct cheap *h, u_int32_t min_size, u_int32_t max_size);
 
 enum which_strict_test {
     OVERSIZE_FREE,
@@ -28,7 +28,7 @@ enum which_strict_test {
 };
 
 int
-cheap_strict_test1(struct cheap *h, u32 min_size, u32 max_size, enum which_strict_test which);
+cheap_strict_test1(struct cheap *h, u_int32_t min_size, u_int32_t max_size, enum which_strict_test which);
 
 #define VERIFY_FALSE_RET(cond, rc)		  \
   do {						  \

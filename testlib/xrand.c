@@ -21,7 +21,7 @@ get_cycles(void)
 }
 
 void
-xrand_init(struct xrand *xr, u64 seed)
+xrand_init(struct xrand *xr, u_int64_t seed)
 {
     if (!seed) {
         while (1) {
@@ -36,13 +36,13 @@ xrand_init(struct xrand *xr, u64 seed)
     xoroshiro128plus_init(xr->xr_state, seed);
 }
 
-u64
-xrand_range64(struct xrand *xr, u64 lo, u64 hi)
+u_int64_t
+xrand_range64(struct xrand *xr, u_int64_t lo, u_int64_t hi)
 {
     /* compute rv: 0 <= rv < 1  */
-    double rand_max = (double)((u64)-1);
+    double rand_max = (double)((u_int64_t)-1);
     double rv = (double)xrand64(xr) / (rand_max + 1.0);
 
     /* scale rv to the desired range */
-    return (u64)((double)lo + (double)(hi - lo) * rv);
+    return (u_int64_t)((double)lo + (double)(hi - lo) * rv);
 }

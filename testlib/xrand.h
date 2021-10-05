@@ -9,15 +9,16 @@
 //#include <hse_util/inttypes.h>
 //#include <hse_util/compiler.h>
 
+#include <sys/types.h>
+
 #include <xoroshiro.h>
 
 #include "xrand.h"
-#include "types.h"
 
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 
 struct xrand {
-    u64 xr_state[2];
+    u_int64_t xr_state[2];
 };
 
 extern struct xrand    xrand_tls;
@@ -27,9 +28,9 @@ extern struct xrand    xrand_tls;
  * They are not thread safe.
  */
 
-void xrand_init(struct xrand *xr, u64 seed);
+void xrand_init(struct xrand *xr, u_int64_t seed);
 
-static u64
+static u_int64_t
 xrand64(struct xrand *xr)
 {
     return xoroshiro128plus(xr->xr_state);
@@ -39,7 +40,7 @@ xrand64(struct xrand *xr)
  * The PRNG is automatically initialized on the first call to xrand64_tls().
  * This function is thread safe.
  */
-static u64
+static u_int64_t
 xrand64_tls(void)
 {
     if (UNLIKELY(!xrand_tls.xr_state[0])) {
@@ -49,7 +50,7 @@ xrand64_tls(void)
     return xrand64(&xrand_tls);
 }
 
-u64
-xrand_range64(struct xrand *xr, u64 lo, u64 hi);
+u_int64_t
+xrand_range64(struct xrand *xr, u_int64_t lo, u_int64_t hi);
 
 #endif

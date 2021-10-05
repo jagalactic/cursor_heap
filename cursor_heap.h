@@ -9,8 +9,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <time.h>
-
-#include "types.h"
+#include <assert.h>
 
 #define MIN(a, b) ((a) > (b)) ? (b) : (a)
 #define MAX(a, b) ((a) < (b)) ? (b) : (a)
@@ -22,14 +21,14 @@
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
 #define PAGE_MASK (~(PAGE_SIZE - 1))
 
-static inline u64
+static inline u_int64_t
 get_cycles(void)
 {
     struct timespec ts;
 
     clock_gettime(CLOCK_MONOTONIC, &ts);
 
-    return (u64)ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+    return (u_int64_t)ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 }
 
 /*
@@ -63,13 +62,13 @@ get_cycles(void)
  */
 struct cheap {
     size_t    alignment;
-    u64       cursorp;
+    u_int64_t cursorp;
     size_t    size;
-    u64       lastp;
-    u64       base;
-    u64       brk;
+    u_int64_t lastp;
+    u_int64_t base;
+    u_int64_t brk;
     void *    mem;
-    u64       magic;
+    u_int64_t magic;
     int       mfd;
 };
 
@@ -166,6 +165,8 @@ cheap_free(struct cheap *h, void *addr);
  */
 void *
 cheap_memalign(struct cheap *h, int alignment, size_t size);
+void *
+cheap_memalign_zero(struct cheap *h, int alignment, size_t size);
 
 /**
  * cheap_used() - return number of bytes used

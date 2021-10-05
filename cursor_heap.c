@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "types.h"
 #include "cursor_heap.h"
 #include "cheap_dax.h"
 #include "minmax.h"
@@ -39,10 +38,10 @@ __cheap_create(void *mem, int alignment, size_t size)
          * cache lines in effort to ameliorate cache conflict misses.
          */
         h->mem       = mem;
-        h->magic     = (u64)h;
+        h->magic     = (u_int64_t)h;
         h->alignment = (size_t)alignment;
         h->size      = size;
-        h->base      = ALIGN((u64)h->mem, CL_SIZE);
+        h->base      = ALIGN((u_int64_t)h->mem, CL_SIZE);
         h->cursorp   = h->base;
         h->brk       = PAGE_ALIGN(h->cursorp);
         h->lastp     = 0;
@@ -110,7 +109,7 @@ cheap_destroy(struct cheap *h)
     if (!h)
         return;
 
-    assert(h->magic == (u64)h);
+    assert(h->magic == (u_int64_t)h);
     if (h->mfd)
 	    close(h->mfd);
 
@@ -120,9 +119,11 @@ cheap_destroy(struct cheap *h)
 static inline void *
 cheap_memalign_impl(struct cheap *h, int alignment, size_t size)
 {
-    u64 allocp;
+    u_int64_t allocp;
 
-    assert(h->magic == (u64)h);
+    assert(h->magic == (u_int64_t)h);
+
+    assert(1 == __builtin_popcount(alignment));
 
     allocp = ALIGN(h->cursorp, alignment);
 
@@ -145,6 +146,19 @@ cheap_memalign(struct cheap *h, int alignment, size_t size)
 		return NULL;
 
 	return cheap_memalign_impl(h, alignment, size);
+}
+
+void *
+cheap_memalign_zero(struct cheap *h, int alignment, size_t size)
+{
+	void *p;
+
+	if (alignment & (alignment - 1))
+		return NULL;
+
+	p = cheap_memalign_impl(h, alignment, size);
+	memset(p, 0, size);
+	return p;
 }
 
 void *
@@ -177,7 +191,7 @@ cheap_free(struct cheap *h, void *addr)
      *
      * [HSE_REVISIT] - this should be replaced by a reservation mechanism
      */
-    if (h->lastp && (u64)addr == h->lastp) {
+    if (h->lastp && (u_int64_t)addr == h->lastp) {
         if (h->brk < h->cursorp)
             h->brk = PAGE_ALIGN(h->cursorp);
         h->cursorp = h->lastp;
@@ -188,7 +202,7 @@ cheap_free(struct cheap *h, void *addr)
 size_t
 cheap_used(struct cheap *h)
 {
-    assert(h->magic == (u64)h);
+    assert(h->magic == (u_int64_t)h);
 
     return min_t(size_t, h->size, (h->cursorp - h->base));
 }
@@ -196,7 +210,7 @@ cheap_used(struct cheap *h)
 size_t
 cheap_avail(struct cheap *h)
 {
-    assert(h->magic == (u64)h);
+    assert(h->magic == (u_int64_t)h);
 
     return h->size - cheap_used(h);
 }

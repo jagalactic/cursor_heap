@@ -24,35 +24,35 @@ randomize_buffer(void *buf, size_t len, unsigned int seed);
 int
 validate_random_buffer(void *buf, size_t len, unsigned int seed);
 
-/* generate_random_u32
+/* generate_random_u_int32_t
  *
- * Create and return a random u32 between min and max inclusive with
+ * Create and return a random u_int32_t between min and max inclusive with
  * a uniform distribution.
  */
-u32
-generate_random_u32(u32 min, u32 max);
+u_int32_t
+generate_random_u_int32_t(u_int32_t min, u_int32_t max);
 
-/* permute_u32_sequence
+/* permute_u_int32_t_sequence
  *
- * Given an array of u32 values, randomly permute its elements without
+ * Given an array of u_int32_t values, randomly permute its elements without
  * introducing repeats.
  */
 void
-permute_u32_sequence(u32 *values, u32 num_values);
+permute_u_int32_t_sequence(u_int32_t *values, u_int32_t num_values);
 
-/* generate_random_u32_sequence
+/* generate_random_u_int32_t_sequence
  *
- * Fill out an array of uniformly distributed random u32 values between min
+ * Fill out an array of uniformly distributed random u_int32_t values between min
  * and max inclusive.
  */
 void
-generate_random_u32_sequence(u32 min_value, u32 max_value, u32 *values, u32 num_values);
+generate_random_u_int32_t_sequence(u_int32_t min_value, u_int32_t max_value, u_int32_t *values, u_int32_t num_values);
 
-/* generate_random_u32_sequence_unique
+/* generate_random_u_int32_t_sequence_unique
  *
- * Same as generate_random_u32_sequence(), but all values are unique.
+ * Same as generate_random_u_int32_t_sequence(), but all values are unique.
  */
 void
-generate_random_u32_sequence_unique(u32 min_value, u32 max_value, u32 *values, u32 num_values);
+generate_random_u_int32_t_sequence_unique(u_int32_t min_value, u_int32_t max_value, u_int32_t *values, u_int32_t num_values);
 
 #endif

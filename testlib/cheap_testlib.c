@@ -11,7 +11,6 @@
 
 #include <stdlib.h>
 
-#include "types.h"
 #include "page.h"
 #include "cursor_heap.h"
 #include "cheap_testlib.h"
@@ -75,16 +74,16 @@ my_memcmp(char *s1, char *s2, size_t len)
  * 3. Verify that all contain the correct data (would catch overlaps)
  */
 int
-cheap_verify_test1(struct cheap *h, u32 min_size, u32 max_size)
+cheap_verify_test1(struct cheap *h, u_int32_t min_size, u_int32_t max_size)
 {
     int             rc = -1;
     int             i = 0;
     int             num_bufs;
     char **         bufs = 0;
-    u32 *           buf_sizes = 0;
+    u_int32_t *           buf_sizes = 0;
     char *          zero_buffer = 0;
     struct xrand xr;
-    s64             max_bufs;
+    int64_t             max_bufs;
     ssize_t         buf_ptr_array_size;
 
     /* Malloc enough space to store an array of sizes if all allocations
@@ -130,7 +129,7 @@ cheap_verify_test1(struct cheap *h, u32 min_size, u32 max_size)
 
         /* Verify alignment while we're at it */
         if (h->alignment)
-            VERIFY_TRUE_RET(IS_ALIGNED((u64)bufs[i], h->alignment), -1);
+            VERIFY_TRUE_RET(IS_ALIGNED((u_int64_t)bufs[i], h->alignment), -1);
 
         i++;
     }
@@ -139,13 +138,13 @@ cheap_verify_test1(struct cheap *h, u32 min_size, u32 max_size)
     /* Fill the buffers with repeatable pseudo-random data */
     for (i = 0; i < num_bufs; i++) {
         /* random seed is low 32 bits of buf address */
-        randomize_buffer(bufs[i], buf_sizes[i], (int)(u64)bufs[i]);
+        randomize_buffer(bufs[i], buf_sizes[i], (int)(u_int64_t)bufs[i]);
     }
 
     /* Validate the data in the buffers */
     for (i = 0; i < num_bufs; i++) {
         rc = validate_random_buffer(bufs[i], buf_sizes[i],
-				    (int)(u64)bufs[i]);
+				    (int)(u_int64_t)bufs[i]);
         /* Success is -1, because the error offset is returned
          * on error (which ranges from 0 to size-1 */
         VERIFY_EQ_RET(-1, rc, -1);
@@ -162,11 +161,11 @@ cheap_verify_test1(struct cheap *h, u32 min_size, u32 max_size)
 }
 
 int
-cheap_zero_test1(struct cheap *h, u32 min_size, u32 max_size)
+cheap_zero_test1(struct cheap *h, u_int32_t min_size, u_int32_t max_size)
 {
     int             i = 0;
     char **         bufs = 0;
-    u32 *           buf_sizes = 0;
+    u_int32_t *           buf_sizes = 0;
     char *          zero_buffer = 0;
     struct xrand xr;
     int             max_bufs;
@@ -223,11 +222,11 @@ cheap_zero_test1(struct cheap *h, u32 min_size, u32 max_size)
 }
 
 int
-cheap_strict_test1(struct cheap *h, u32 min_size, u32 max_size, enum which_strict_test which)
+cheap_strict_test1(struct cheap *h, u_int32_t min_size, u_int32_t max_size, enum which_strict_test which)
 {
     int             i = 0;
     char **         bufs = 0;
-    u32 *           buf_sizes = 0;
+    u_int32_t *           buf_sizes = 0;
     struct xrand xr;
     int             max_bufs;
 

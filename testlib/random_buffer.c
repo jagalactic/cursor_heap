@@ -9,7 +9,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include "types.h"
 #include "xrand.h"
 
 void
@@ -71,16 +70,16 @@ validate_random_buffer(void *buf, size_t len, unsigned int seed)
 
 /* Get a random value in the range [min, max]. Note that the max is an inclusive upper bound.
  */
-u32
-generate_random_u32(u32 min, u32 max)
+u_int32_t
+generate_random_u32(u_int32_t min, u_int32_t max)
 {
     return (xrand64_tls() % (max - min + 1)) + min;
 }
 
 void
-permute_u32_sequence(u32 *values, u32 num_values)
+permute_u32_sequence(u_int32_t *values, u_int32_t num_values)
 {
-    u32 i, j, tmp_val;
+    u_int32_t i, j, tmp_val;
 
     for (i = num_values - 1; i > 0; --i) {
         j = generate_random_u32(0, i - 1);
@@ -91,9 +90,9 @@ permute_u32_sequence(u32 *values, u32 num_values)
 }
 
 void
-generate_random_u32_sequence(u32 min_value, u32 max_value, u32 *values, u32 num_values)
+generate_random_u32_sequence(u_int32_t min_value, u_int32_t max_value, u_int32_t *values, u_int32_t num_values)
 {
-    u32 i;
+    u_int32_t i;
 
     for (i = 0; i < num_values; ++i)
         values[i] = generate_random_u32(min_value, max_value);
@@ -102,16 +101,16 @@ generate_random_u32_sequence(u32 min_value, u32 max_value, u32 *values, u32 num_
 }
 
 void
-generate_random_u32_sequence_unique(u32 min_value, u32 max_value, u32 *values, u32 num_values)
+generate_random_u32_sequence_unique(u_int32_t min_value, u_int32_t max_value, u_int32_t *values, u_int32_t num_values)
 {
-    u32 i;
-    u32 stride = (max_value - min_value) / num_values;
+    u_int32_t i;
+    u_int32_t stride = (max_value - min_value) / num_values;
 
     assert(stride > 0);
 
     for (i = 0; i < num_values; ++i) {
-        u32 min = i * stride;
-        u32 max = min + stride - 1;
+        u_int32_t min = i * stride;
+        u_int32_t max = min + stride - 1;
 
         if (i == num_values - 1)
             max = max_value;
