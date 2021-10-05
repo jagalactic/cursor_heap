@@ -15,7 +15,7 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/testlib")
 
 
-add_library(cheap_dax cursor_heap.c cheap_dax.c )
+add_library(cursor_heap cursor_heap.c cheap_dax.c )
 
 
 

@@ -17,7 +17,7 @@ foreach(file ${tests})
     ${file}
     )
 #    "${PROJECT_SOURCE_DIR}/test/main.cpp")
-  target_link_libraries("${name}_tests" gtest_main cheaptest cheap_dax)
+  target_link_libraries("${name}_tests" gtest_main cheaptest cursor_heap)
   message(STATUS "name=${name}")
   add_test(NAME ${name} COMMAND "${name}_tests")
 endforeach()
