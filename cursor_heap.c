@@ -104,8 +104,10 @@ cheap_create_dax(const char *devpath, int alignment)
 		exit(-1);
 	}
 	h =  __cheap_create(addr, alignment, size);
-	h->mfd = mfd;
-	h->mapped = 1;
+	if (h) {
+		h->mfd = mfd;
+		h->mapped = 1;
+	}
 	return h;
 }
 
