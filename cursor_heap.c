@@ -53,6 +53,7 @@ struct cheap *
 
 cheap_create(int alignment, size_t size)
 {
+	struct cheap *h;
 	void *addr;
 
 	if (size < 0)
@@ -70,7 +71,10 @@ cheap_create(int alignment, size_t size)
 		fprintf(stderr, "Anonymous mmap failed\n");
 		exit(-1);
 	}
-	return __cheap_create(addr, alignment, size);
+	h = __cheap_create(addr, alignment, size);
+	if (h)
+		h->mapped = 1;
+	return h;
 }
 
 struct cheap *
@@ -101,6 +105,8 @@ cheap_create_dax(const char *devpath, int alignment)
 	}
 	h =  __cheap_create(addr, alignment, size);
 	h->mfd = mfd;
+	h->mapped = 1;
+	return h;
 }
 
 void
@@ -110,6 +116,10 @@ cheap_destroy(struct cheap *h)
         return;
 
     assert(h->magic == (u_int64_t)h);
+
+    if (h->mapped)
+	    munmap((void *)h->mem, h->size);
+
     if (h->mfd)
 	    close(h->mfd);
 

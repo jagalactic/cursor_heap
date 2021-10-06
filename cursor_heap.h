@@ -10,16 +10,13 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <sys/user.h>
 
 #define MIN(a, b) ((a) > (b)) ? (b) : (a)
 #define MAX(a, b) ((a) < (b)) ? (b) : (a)
 
 #define CL_SIZE 64
 #define CL_SHIFT 6
-
-#define PAGE_SHIFT 12
-#define PAGE_SIZE (1UL << PAGE_SHIFT)
-#define PAGE_MASK (~(PAGE_SIZE - 1))
 
 static inline u_int64_t
 get_cycles(void)
@@ -70,6 +67,7 @@ struct cheap {
     void *    mem;
     u_int64_t magic;
     int       mfd;
+    int       mapped;
 };
 
 /**
@@ -159,9 +157,11 @@ cheap_free(struct cheap *h, void *addr);
  * @size:       size in bytes of the desired allocation
  *
  * This function has the same general calling convention and semantics
- * as aligned_alloc() and memalign().
+ * as aligned_alloc() and memalign().  The alignment parameter of this
+ * function overrides the default alignment of the cursor_heap (even
+ * if it is smaller)
  *
- * Return: Returns 0 if successful, otherwise returns an errno.
+ * Return: Returns a pointer to the allocated memory, or NULL on failure
  */
 void *
 cheap_memalign(struct cheap *h, int alignment, size_t size);
