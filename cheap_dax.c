@@ -13,14 +13,14 @@
 #include <limits.h>
 #include <stdlib.h>
 
-size_t
-cheap_devdax_get_file_size(const char *fname)
+int
+cheap_devdax_get_file_size(const char *fname, size_t *size)
 {
 	char spath[PATH_MAX];
 	char npath[PATH_MAX];
 	char *rpath, *basename;
 	FILE *sfile;
-	u_int64_t size;
+	u_int64_t size_i;
 	struct stat st;
 	int rc;
 
@@ -55,18 +55,19 @@ cheap_devdax_get_file_size(const char *fname)
 	if (!sfile) {
 		fprintf(stderr, "%s: fopen on %s failed (%s)\n",
 			__func__, spath, strerror(errno));
-		return -1;
+		return -EINVAL;
 	}
 
-	rc = fscanf(sfile, "%lu", &size);
+	rc = fscanf(sfile, "%lu", &size_i);
 	if (rc < 0) {
 		fprintf(stderr, "%s: fscanf on %s failed (%s)\n",
 			__func__, spath, strerror(errno));
 		fclose(sfile);
-		return -1;
+		return -EINVAL;
 	}
 
 	fclose(sfile);
 
-	return size;
+	*size = (size_t)size_i;
+	return 0;
 }
