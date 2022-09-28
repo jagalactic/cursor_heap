@@ -82,8 +82,16 @@ cheap_create_dax(const char *devpath, int alignment)
 {
 	int mfd;
 	void *addr;
-	size_t size = cheap_devdax_get_file_size(devpath);
+	size_t size;
 	struct cheap *h;
+	int rc;
+
+        rc = cheap_devdax_get_file_size(devpath, &size);
+        if (rc != 0) {
+		fprintf(stderr, "Failed to get size of %s\n",
+			devpath);
+		exit(-1);
+        }
 
 	printf("%s: %s size is %ld\n", __func__, devpath, size);
 	if (size <= 0)

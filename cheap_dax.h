@@ -4,7 +4,7 @@
 
 #include <sys/types.h>
 
-size_t cheap_devdax_get_file_size(const char *fname);
+int cheap_devdax_get_file_size(const char *fname, size_t *size);
 
 
 #endif
