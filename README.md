@@ -2,7 +2,7 @@
 # cursor_heap (aka cheap)
 
 The cursor_heap library is adapted from the cursor_heap component in the
-[Heterogeneous Storage Engine](https://github.com/hse-project/hse). 
+[Heterogeneous-Memory Storage Engine](https://github.com/hse-project). 
 In HSE we needed a compact allocator for
 Bonsai Tree elements, and we knew that our Bonsai Trees would be freed
 all at once - so 1) we didn't need the ability to free individual elements,
