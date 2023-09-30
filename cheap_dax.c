@@ -18,12 +18,12 @@ int
 cheap_devdax_get_file_size(const char *fname, size_t *size)
 {
 	char spath[PATH_MAX];
-	char npath[PATH_MAX];
-	char *rpath, *basename;
+	char *basename;
 	FILE *sfile;
 	u_int64_t size_i;
 	struct stat st;
 	int rc;
+	int is_blk = 0;
 
 	rc = stat(fname, &st);
 	if (rc < 0) {
@@ -32,26 +32,22 @@ cheap_devdax_get_file_size(const char *fname, size_t *size)
 		return -errno;
 	}
 
-	snprintf(spath, PATH_MAX, "/sys/dev/char/%d:%d/subsystem",
-		 major(st.st_rdev), minor(st.st_rdev));
-
-	rpath = realpath(spath, npath);
-	if (!rpath) {
-		fprintf(stderr, "%s: realpath on %s failed (%s)\n",
-			__func__, spath, strerror(errno));
-		return -errno;
+	basename = strrchr(fname, '/');
+	switch (st.st_mode & S_IFMT) {
+	case S_IFBLK:
+		is_blk = 1;
+		snprintf(spath, PATH_MAX, "/sys/class/block%s/size", basename);
+		break;
+	case S_IFCHR:
+		snprintf(spath, PATH_MAX, "/sys/dev/char/%d:%d/size",
+			 major(st.st_rdev), minor(st.st_rdev));
+		break;
+	default:
+		fprintf(stderr, "invalid dax device %s\n", fname);
+		return -EINVAL;
 	}
 
-	/* Check if DAX device */
-	basename = strrchr(rpath, '/');
-	if (!basename || strcmp("dax", basename+1)) {
-		fprintf(stderr, "%s: %s not a DAX device!\n",
-			__func__, fname);
-	}
-
-	snprintf(spath, PATH_MAX, "/sys/dev/char/%d:%d/size",
-		 major(st.st_rdev), minor(st.st_rdev));
-
+	printf("%s: getting daxdev size from file %s\n", __func__, spath);
 	sfile = fopen(spath, "r");
 	if (!sfile) {
 		fprintf(stderr, "%s: fopen on %s failed (%s)\n",
@@ -69,6 +65,10 @@ cheap_devdax_get_file_size(const char *fname, size_t *size)
 
 	fclose(sfile);
 
+	if (is_blk)
+		size_i *= 512; /* blkdev size is in 512b blocks */
+
+	printf("%s: size=%ld\n", __func__, size_i);
 	*size = (size_t)size_i;
 	return 0;
 }
