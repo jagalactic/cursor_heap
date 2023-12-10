@@ -47,10 +47,25 @@ For examples, refer to the unit tests in:
 testlib/cheap_testlib.c
 ```
 
-## DAX memory
+## Specific memory
 
-cursor_heap currently supports devdax mode. The entire dax device will be mapped
-and used when you call cheap_create_dax().
+cursor_heap currently supports specific memory mode, which is still accessed
+via cheap_create_dax(path, alignment) as if it's just dax memory, but it
+supports three types of specific memory now. The path can be any of the
+following:
+
+* dax memory (e.g. /dev/dax0.0)
+* pmem (e.g. /dev/pmem0 - which is very dax-like)
+* file backed memory (any existing file, really, but the feature is here
+  for fs-dax file systems, in which files map to specific non-page-cache
+  memory). If you back a cursor-heap by an fs-dax file, you are using
+  another version of a cursor_heap backed by specific memory.
+
+In all of these cases, the cursor heap is created via the cheap_create_dax()
+call. The entire device, or the entire file will be mmapped.
+
+This means it's possible to back a cursor heap by a regular file. I'm not
+sure this would accomplish what you want, but have fun with it if you care ;).
 ```c:
     struct cheap *h;
 

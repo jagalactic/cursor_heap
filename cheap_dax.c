@@ -42,6 +42,11 @@ cheap_devdax_get_file_size(const char *fname, size_t *size)
 		snprintf(spath, PATH_MAX, "/sys/dev/char/%d:%d/size",
 			 major(st.st_rdev), minor(st.st_rdev));
 		break;
+	case S_IFREG:
+		printf("Arena is not devdax, but a regular file\n");
+		*size = st.st_size;
+		return 0;
+		break;
 	default:
 		fprintf(stderr, "invalid dax device %s\n", fname);
 		return -EINVAL;
